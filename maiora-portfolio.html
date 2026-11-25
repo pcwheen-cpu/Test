@@ -1,0 +1,198 @@
+<title>Maiora Portfolio Explorer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@125,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE work: an LP/founder-facing portfolio instrument in the firm's own monochrome
+   IDEA a sky chart: every company a star, rows are sectors, size is stage, colour is the vehicle
+   PICTURE the sector-by-sector star field of all 216 companies, filters dim what doesn't match
+   COLOUR near-black #08080a ground, #f5f5f3 ink; vehicles: MBV white, MAIV blue, MCAP amber, MRV grey
+   TYPE Archivo expanded 700 + Inter
+   LAYOUT laptop: title + figures across the top, filters bar, star field left with detail panel right; phone: stacked, detail as bottom sheet */
+:root{color-scheme:dark;--bg:#08080a;--surf:#101013;--line:#1e1e22;--line2:#2a2a30;--ink:#f5f5f3;--mute:#8a8a93;--B:#ffffff;--A:#5b8cff;--C:#f0a43a;--R:#6e6e78}
+*{box-sizing:border-box;min-width:0}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif;overflow-x:clip}
+.band{max-width:1320px;margin:0 auto;padding-block:28px 40px;padding-left:max(5vw,16px,env(safe-area-inset-left,0px));padding-right:max(5vw,16px,env(safe-area-inset-right,0px))}
+.top{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px 40px;align-items:end;padding-bottom:22px;border-bottom:1px solid var(--line)}
+h1{font:700 clamp(30px,4.6vw,50px)/1.02 Archivo,sans-serif;font-stretch:125%;letter-spacing:-.02em;margin:0}
+.sub{color:var(--mute);margin:10px 0 0;max-width:56ch}
+.figs{display:grid;grid-template-columns:repeat(4,auto);gap:4px 28px}
+.fig b{display:block;font:700 26px/1.1 Archivo,sans-serif;font-stretch:125%;white-space:nowrap}
+.fig span{color:var(--mute);font-size:13px}
+.bar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;padding:18px 0}
+.funds{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line2);background:transparent;color:var(--ink);font:500 14px Inter,sans-serif;cursor:pointer;white-space:nowrap}
+.chip:hover{border-color:#44444c}
+.chip[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.chip small{opacity:.6;font-size:13px}
+.seg{display:inline-flex;border:1px solid var(--line2);border-radius:999px;overflow:hidden}
+.seg button{min-height:40px;padding:0 14px;border:0;background:transparent;color:var(--ink);font:500 14px Inter,sans-serif;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line2)}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+input[type=search]{flex:1 1 200px;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line2);background:var(--surf);color:var(--ink);font:16px Inter,sans-serif}
+button:focus-visible,input:focus-visible,.star:focus-visible{outline:2px solid var(--A);outline-offset:2px}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:28px;align-items:start}
+.finding{font-size:16px;margin:0 0 14px;color:var(--ink)}
+.finding em{font-style:normal;color:var(--mute)}
+.sky{border-top:1px solid var(--line)}
+.row{display:grid;grid-template-columns:190px minmax(0,1fr) 36px;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+.row h3{margin:0;font:500 14px/1.3 Inter,sans-serif;color:var(--mute)}
+.row.has h3{color:var(--ink)}
+.row .n{text-align:right;font-variant-numeric:tabular-nums;color:var(--mute);font-size:14px}
+.row.has .n{color:var(--ink)}
+.stars{display:flex;flex-wrap:wrap;gap:5px;align-items:center;min-height:22px}
+.star{border:0;padding:0;border-radius:50%;cursor:pointer;background:var(--c);transition:opacity .2s,transform .15s;position:relative}
+.star.s0{width:10px;height:10px}.star.s1{width:15px;height:15px}.star.s2{width:21px;height:21px}
+.star.multi{box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px var(--c2)}
+.star.off{opacity:.12}
+.star:hover{transform:scale(1.35)}
+.star.sel{box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;color:var(--mute);font-size:13px;margin-top:14px;align-items:center}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:inline-block;border-radius:50%;background:var(--mute)}
+aside{position:sticky;top:16px;display:grid;gap:16px}
+.card{background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:18px}
+.card h2{font:700 22px/1.1 Archivo,sans-serif;font-stretch:125%;margin:0 0 4px;letter-spacing:-.01em}
+.card .meta{color:var(--mute);font-size:14px;margin:0 0 12px}
+.card a{color:var(--ink)}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.tag{font-size:13px;padding:3px 10px;border-radius:999px;border:1px solid var(--line2);display:inline-flex;gap:6px;align-items:center}
+.tag i{width:8px;height:8px;border-radius:50%}
+.mandate{color:var(--mute);font-size:14px;margin:0}
+.mix h4{margin:0 0 10px;font:600 14px Inter,sans-serif}
+.mrow{display:grid;grid-template-columns:64px minmax(0,1fr) 34px;gap:10px;align-items:center;font-size:13px;margin-bottom:7px}
+.track{height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+.track b{display:block;height:100%;border-radius:4px}
+.mrow .v{text-align:right;font-variant-numeric:tabular-nums}
+.empty{color:var(--mute);font-size:14px;margin:0}
+.list{margin-top:34px}
+.list h2{font:700 24px/1.1 Archivo,sans-serif;font-stretch:125%;margin:0 0 12px}
+.scroll{overflow-x:auto;max-height:440px;overflow-y:auto;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{position:sticky;top:0;background:var(--surf);text-align:left;font-weight:600;color:var(--mute)}
+th,td{padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td a{color:var(--mute)}
+tr.pick{cursor:pointer}tr.pick:hover td{background:#141418}
+.note{color:var(--mute);font-size:13px;margin-top:22px}
+@media(max-width:960px){.main{grid-template-columns:minmax(0,1fr)}aside{position:static}.top{grid-template-columns:minmax(0,1fr)}.figs{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:600px){.row{grid-template-columns:minmax(0,1fr) 30px;gap:6px 10px}.row .stars{grid-column:1/-1;grid-row:2}.figs{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.fig b{font-size:22px}.hidem{display:none}th,td{padding:7px 8px;font-size:13px}}
+@media(prefers-reduced-motion:reduce){.star{transition:none}}
+</style>
+
+<div class="band">
+  <div class="top">
+    <div>
+      <h1>The Maiora portfolio</h1>
+      <p class="sub">216 companies across four vehicles. Filter by fund, stage or name, then pick any company to see where it sits.</p>
+    </div>
+    <div class="figs">
+      <div class="fig"><b>$650m</b><span>AUM</span></div>
+      <div class="fig"><b>$180m</b><span>distributed</span></div>
+      <div class="fig"><b>216</b><span>companies</span></div>
+      <div class="fig"><b>4</b><span>vehicles</span></div>
+    </div>
+  </div>
+
+  <div class="bar">
+    <div class="funds" id="funds"></div>
+    <div class="seg" id="stages" role="group" aria-label="Stage"></div>
+    <input type="search" id="q" placeholder="Search companies" aria-label="Search companies">
+  </div>
+
+  <div class="main">
+    <div>
+      <p class="finding" id="finding"></p>
+      <div class="sky" id="sky"></div>
+      <div class="legend">
+        <span><i style="width:10px;height:10px"></i>Seed</span>
+        <span><i style="width:15px;height:15px"></i>Mid</span>
+        <span><i style="width:21px;height:21px"></i>Growth</span>
+        <span><i style="width:13px;height:13px;background:var(--bg);box-shadow:0 0 0 2px var(--mute)"></i>Ringed: held by more than one vehicle</span>
+      </div>
+    </div>
+    <aside>
+      <div class="card" id="detail"></div>
+      <div class="card mix" id="mix"></div>
+    </aside>
+  </div>
+
+  <div class="list">
+    <h2 id="lt">Companies</h2>
+    <div class="scroll"><table>
+      <thead><tr><th>Company</th><th>Vehicle</th><th class="hidem">Sector</th><th>Stage</th><th class="hidem">Website</th></tr></thead>
+      <tbody id="tb"></tbody>
+    </table></div>
+  </div>
+  <p class="note">Data as listed on maioraventures.com, November 2026. Sectors and stages are the site's own classification.</p>
+</div>
+
+<script>
+{
+const D=[["AccessOwl","R",12,0,"accessowl.io"],["Aegis Health","R",4,0,"aegishealth.us"],["Aeolus","C",11,0,"aeolus.earth"],["Agentic Labs","R",2,0,"agenticlabs.com"],["AiSDR","R",1,0,"aisdr.com"],["Alephee","R",9,0,"alephee.com"],["Almond","R",7,0,"almondbot.com"],["AltTex","R",11,0,"thealttex.com"],["Amiloz","R",3,0,"amiloz.com"],["Ampverse","C",8,1,"ampversegroup.com"],["Andromeda Surgical","R",4,1,"andromedasurgical.com"],["Anduril","A",6,2,"anduril.com"],["Angstrom AI","R",5,0,"angstrom-ai.com"],["Apollo Group","R",9,0,"apollo-group.io"],["Arcane","R",8,0,""],["Array Labs","CR",6,1,"arraylabs.io"],["Artos AI","R",5,0,"artosai.com"],["Asha Health","R",4,0,"asha.health"],["atai","C",5,2,"atai.life"],["Atla AI","R",1,0,"atla-ai.com"],["Aveli Health","R",4,0,"avelishealth.com"],["Baud","B",0,0,"baudlabs.ai"],["Beckley Psytech","C",5,2,"beckleypsytech.com"],["Betterhalf","R",8,1,"betterhalf.ai"],["Bifrost Orbital","R",6,0,"bifrostorbital.com"],["Blank Bio","R",5,0,"blank.bio"],["Cacao","R",3,0,"cacaofi.com/en"],["Cactus","R",1,0,"oncactus.com"],["Cair Health","R",4,0,"cairhealth.com"],["Candy AI","AC",8,0,"candy.ai"],["Capi Money","R",3,1,"capimoney.com"],["Capitol AI","R",1,1,"capitol.ai"],["Cardamon","R",3,0,"cardamon.ai"],["Casco","R",12,0,"casco.com"],["Caseflood","R",1,0,"caseflood.ai"],["Cedalio","R",2,0,"cedalio.com"],["Cercli","R",1,0,"cercli.com"],["Cerrion","R",7,1,"cerrion.com"],["Chope","C",9,2,"chope.co"],["Chowdeck","R",9,1,"chowdeck.com"],["Circlemind","R",2,0,"circlemind.co"],["Circular","C",9,0,"nowcircular.com"],["Colossal","BAC",5,2,"colossal.com"],["Commodity AI","R",10,0,"commodityai.io"],["Computable","B",0,0,"getcomputable.com"],["Conception","A",5,1,"conception.bio"],["Conveo","R",1,1,"conveo.ai"],["Convexia","R",5,0,"convexia.bio"],["CoreWeave","C",0,2,"coreweave.com"],["Corgi","BAR",3,1,"corgi.insure"],["Cosmic Robotics","B",7,0,"cosmicrobotics.com"],["Created by Humans","R",8,0,"createdbyhumans.ai"],["Curo","R",11,0,"curocharging.com"],["Dalus","R",6,0,"dalus.io"],["Dataleap","R",1,0,"dataleap.ai"],["Deasie","R",2,0,"deasie.com"],["Digital Carbon","R",8,0,"digitalcarbon.ai"],["Dili AI","R",3,1,"diliai.com"],["Distro","R",1,0,"distro.app"],["Docsum","R",1,0,"docsum.ai"],["Dr Treat","R",4,0,"drtreat.com"],["Drip","R",3,0,"dripapp.com.br"],["Elyos Energy","R",11,0,"elyosenergy.com"],["Empirical Health","R",4,0,"empirical.health"],["Erebor","A",3,1,"erebor.io"],["Eterneva","C",8,1,"eterneva.com"],["Every","R",3,1,"every.io"],["Evoly Energy","R",11,0,"evolyenergy.com"],["Extropic","A",0,0,"extropic.ai"],["Fastgen","R",2,0,"fastgen.com"],["Fiber AI","R",1,0,"fiber.ai"],["First Circle","C",3,1,"firstcircle.ph"],["Florin","B",3,0,"florin.inc"],["Freya","R",1,0,"freyavoice.ai"],["Gamgee","B",5,0,"gamgee.io"],["Gecko Security","R",12,0,"gecko.security"],["Genki","B",7,1,"genki.com"],["GMI Cloud","A",0,1,"gmicloud.ai"],["Groq","AC",0,2,"groq.com"],["Gullak","R",3,1,"gullak.money"],["Hazel Tech","R",1,0,"hazeltech.ai"],["hiloop","B",0,0,"hiloop.ai"],["Hona","R",4,0,"hona.ai"],["Honeydew","R",2,0,"honeydew.ai"],["Humoniq","R",1,0,"humoniq.ai"],["Hyperbound","R",1,1,"hyperbound.ai"],["Infinia","R",3,0,"infiniaweb.com"],["Infobot","R",8,0,"infobot.ai"],["InspectMind","R",13,0,"inspectmind.ai"],["Instinct Space","R",6,0,"instinct-space.com"],["Invofox","R",2,0,"invofox.ai"],["Invopop","R",3,0,"invopop.com"],["Isengard Industries","B",6,0,"isengardindustries.com"],["JustPaid","R",3,0,"justpaid.io"],["Kabuk","C",9,2,"kabuk.com"],["Kaelio","R",2,0,"kaelio.com"],["Konstructly","R",13,0,"konstructly.com"],["Koywe","R",3,1,"koywe.com"],["KraveMart","R",9,0,"kravemart.com"],["Lambda","A",0,2,"lambda.ai"],["Lightscreen","R",1,0,"lightscreen.ai"],["Linc AI","R",10,0,"linc-ai.com"],["Lio","R",1,1,"lio.ai"],["Lucis","R",4,1,"lucis.life"],["Lyra","R",1,0,"lyra.so"],["MangoDesk","R",2,0,"mangodesk.com"],["Mantle","R",7,2,"mantle3d.com"],["Marr Labs","R",1,0,"marrlabs.com"],["MDHub","R",4,0,"mdhub.ai"],["Mecha Health","R",4,0,"mecha-health.ai"],["Mercator","R",10,0,""],["Mesh","R",3,0,"usemesh.com"],["Mesmer","R",2,0,"mesmer.co"],["Miliopay","R",3,0,"miliopay.com"],["Minimal","R",1,0,"gominimal.ai"],["Modelence","R",2,0,"modelence.com"],["Momentu","R",4,0,"momentu.co"],["Motives","R",1,0,"motives.ai"],["Munify","R",3,0,"munify.ai"],["Narrative","R",10,0,"trynarrative.com"],["Nautilus","R",1,0,"nautilus.co"],["Nebula Security","B",12,0,"nebusec.ai"],["Nitrode","R",8,0,"nitrode.com"],["Noso","R",1,0,"noso.so"],["Novig","AR",8,1,"novig.co"],["Octo","R",1,0,"getocto.ai"],["Odyssey","B",0,1,"odyssey.systems"],["OffDeal","R",3,1,"offdeal.io"],["Omnistrate","R",2,0,"omnistrate.com"],["OpenMart","R",1,0,"openmart.ai"],["OpenRelay","B",0,0,"openrelay.inc"],["Orbital Operations","R",6,0,"orbitalops.tech"],["OrgOrg","R",1,0,"orgorg.us"],["Outset","R",1,1,"outset.ai"],["Overstand","R",1,0,"overstandlabs.com"],["Packsmith","C",10,0,"packsmith.io"],["PartnerHQ","R",9,0,"trypartnerhq.com"],["Peeba","R",9,0,"peeba.com"],["Peppr AI","R",1,0,"usepeppr.ai"],["Permit Portal","R",13,0,"permitportalapp.com"],["Perplexity","A",0,2,"perplexity.ai"],["Perseus Defense","R",6,0,"perseusdefense.com"],["Pickle","R",8,0,"getpickle.ai"],["Play","C",8,1,"play.co"],["Playbox","R",8,0,"fifthdoor.com"],["Point One","R",1,1,"pointone.ai"],["Proglix","R",9,0,"proglix.com"],["Pythagora","R",2,0,"pythagora.ai"],["Raylo","C",3,1,"raylo.com"],["Reacher","R",1,0,"reacherapp.com"],["Reboot Japan","C",9,0,"reboot-japan.com/en"],["Recall","R",2,1,"recall.ai"],["Reform","R",10,0,"reformhq.com"],["Relvy","R",2,0,"relvy.ai"],["RePrompt","R",2,0,"repromptai.com"],["Rewbi","R",11,0,"rewbi.com"],["Reworkd","R",2,0,"reworkd.ai"],["Rex","B",1,0,"rex.inc"],["Risely","R",14,0,"risely.ai"],["Rocketable","R",1,0,"rocketable.com"],["RonanRx","B",4,0,"ronanrx.com"],["SambaNova","A",0,2,"sambanova.ai"],["Scalar Field","R",3,0,"scalarfield.io"],["Scanbase","R",4,0,"scanbase.com"],["Seals","R",1,0,"hireseals.ai"],["Senso","R",1,0,"senso.ai"],["ShapeScale","R",4,0,"shapescale.com"],["Shekel Mobility","R",9,0,"shekelmobility.com"],["SID","R",2,0,"sid.ai"],["Skild AI","A",7,2,"skild.ai"],["Slauth","R",12,0,""],["SoCap","R",1,0,"socap.ai"],["Sohar Health","R",4,0,"soharhealth.com"],["Sonauto","R",8,0,"sonauto.ai"],["Sonia Health","R",4,0,"soniahealth.com"],["Sphinx","R",3,0,"sphinxlabs.ai"],["Spine","R",2,0,"getspine.ai"],["SPRX","R",3,1,"sprx.tax"],["StoryQuest","R",8,0,""],["Studdy","R",14,0,"studdy.ai"],["Superagent","R",2,0,"superagent.sh"],["SureBright","R",3,0,"surebright.com"],["Sygaldry","R",0,0,"sygaldry.com"],["Symphony","R",1,0,"getsymphony.co"],["Sync Labs","R",2,0,"synclabs.so"],["Tandem","R",13,0,"tandem.space"],["TaxGPT","R",3,0,"taxgpt.com"],["Tensordyne","BA",0,1,"tensordyne.ai"],["Theya","R",3,0,"theya.us"],["Together AI","A",0,2,"together.ai"],["Toonsutra","C",8,0,"toonsutra.com"],["Toothy","R",4,0,"toothy.ai"],["Tranch","R",3,0,"tranch.com"],["Trigger.dev","R",2,0,"trigger.dev"],["TrueClaim","R",4,0,"trytrueclaim.com"],["TrueMetrics","R",10,0,"truemetrics.io"],["Typewise","R",1,0,"typewise.app"],["Ultra","R",7,1,"ultra.tech"],["Ultrasonium","B",7,0,"ultrasonium.com"],["Unriddle","R",14,0,"unriddle.ai"],["Untether Labs","R",4,0,"untetherlabs.com"],["Vaero","R",2,0,"vaero.co"],["Vahan","R",9,1,"vahan.co"],["Vantel","R",3,0,"vantel.ai"],["Veles","R",1,0,"getveles.com"],["Veritus","R",3,0,"veritusagent.ai"],["Versa","R",11,0,""],["VersusGame","C",8,1,"versusgame.com"],["VideoGen","R",8,0,"videogen.io"],["Vitalize Care","R",4,0,"vitalizecare.co"],["VoicePanel","R",1,0,"voicepanel.co"],["Wallbit","R",3,0,"wallbit.io"],["WareIQ","R",10,0,"wareiq.com"],["Warhound","BA",6,0,""],["Wattson Health","R",4,0,"wattsonhealth.com"],["WonderTx","B",5,0,"wondertx.ai"]];
+const SECT=["AI infrastructure & compute","Enterprise software","Developer tools","Fintech","Healthcare","Biotech & life sciences","Aerospace & defense","Robotics & hardware","Consumer & media","Commerce & marketplaces","Logistics & mobility","Climate & energy","Cybersecurity","Real estate & construction","Education"];
+const STG=["Seed","Mid","Growth"];
+const F={
+  B:{code:'MBV',name:'Maiora BlackSky Ventures',m:'Current fund, investing now. A generalist lifecycle fund investing early to late stage into exceptional founder-led startups.'},
+  A:{code:'MAIV / MAV',name:'Maiora AI Ventures / Maiora Arrakis Ventures',m:'Concentrated investments in market-leading mid- and late-stage AI companies.'},
+  C:{code:'MCAP',name:'Maiora Capital',m:'A special-situations vehicle investing across sectors, stages and geographies.'},
+  R:{code:'MRV',name:'Maiora Rebel Ventures',m:'An early-stage fund focused on Y Combinator, aiming at the top 10% of each cohort.'}
+};
+const FK=['B','A','C','R'];
+const co=D.map(([n,f,s,st,u],i)=>({i,n,f,s,st,u}));
+const $=id=>document.getElementById(id);
+const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let S={fund:null,stage:null,q:'',sel:co.find(c=>c.n==='Colossal')?.i??0};
+const match=c=>(!S.fund||c.f.includes(S.fund))&&(S.stage===null||c.st===S.stage)&&(!S.q||c.n.toLowerCase().includes(S.q));
+const fundTags=c=>[...c.f].map(k=>`<span class="tag"><i style="background:var(--${k})"></i>${F[k].code}</span>`).join('');
+
+$('funds').innerHTML=`<button class="chip" data-f="">All <small>216</small></button>`+FK.map(k=>`<button class="chip" data-f="${k}"><i style="background:var(--${k})"></i>${F[k].code.split(' ')[0]} <small>${co.filter(c=>c.f.includes(k)).length}</small></button>`).join('');
+$('stages').innerHTML=`<button data-s="">All stages</button>`+STG.map((s,i)=>`<button data-s="${i}">${s}</button>`).join('');
+
+$('sky').innerHTML=SECT.map((name,si)=>{
+  const list=co.filter(c=>c.s===si).sort((a,b)=>b.st-a.st||FK.indexOf(a.f[0])-FK.indexOf(b.f[0]));
+  return `<div class="row" data-r="${si}"><h3>${name}</h3><div class="stars">${list.map(c=>`<button class="star s${c.st}${c.f.length>1?' multi':''}" data-i="${c.i}" style="--c:var(--${c.f[0]});--c2:var(--${c.f[1]||c.f[0]})" aria-label="${esc(c.n)}" title="${esc(c.n)}"></button>`).join('')}</div><span class="n"></span></div>`;
+}).join('');
+
+function render(){
+  document.querySelectorAll('#funds .chip').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.f||null)===S.fund)));
+  document.querySelectorAll('#stages button').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.s===''?null:+b.dataset.s)===S.stage)));
+  const hit=co.filter(match);
+  document.querySelectorAll('.star').forEach(el=>{const c=co[+el.dataset.i];el.classList.toggle('off',!match(c));el.classList.toggle('sel',c.i===S.sel)});
+  document.querySelectorAll('.row').forEach(r=>{const k=hit.filter(c=>c.s===+r.dataset.r).length;r.querySelector('.n').textContent=k;r.classList.toggle('has',k>0)});
+
+  // finding
+  const by=SECT.map((n,i)=>[n,hit.filter(c=>c.s===i).length]).sort((a,b)=>b[1]-a[1]);
+  const scope=(S.fund?F[S.fund].code.split(' ')[0]:'The portfolio')+(S.stage!==null?` at ${STG[S.stage].toLowerCase()} stage`:'');
+  $('finding').innerHTML=!hit.length?'No companies match these filters.':
+    `<b>${esc(scope)}: ${hit.length} ${hit.length===1?'company':'companies'}.</b> <em>Largest sector is ${by[0][0].toLowerCase()} (${by[0][1]}, ${Math.round(by[0][1]/hit.length*100)}%).</em>`;
+
+  // detail
+  const c=co[S.sel];
+  $('detail').innerHTML=`<h2>${esc(c.n)}</h2><p class="meta">${SECT[c.s]} · ${STG[c.st]}</p><div class="tags">${fundTags(c)}</div>`+
+    [...c.f].map(k=>`<p class="mandate"><b style="color:var(--ink)">${F[k].code}.</b> ${F[k].m}</p>`).join('<br>')+
+    (c.u?`<p class="meta" style="margin:14px 0 0"><a href="https://${esc(c.u)}" target="_blank" rel="noopener">${esc(c.u)} ↗</a></p>`:'');
+
+  // vehicle mix for current filter
+  const tot=Math.max(1,hit.length);
+  $('mix').innerHTML=`<h4>By vehicle, current view</h4>`+FK.map(k=>{const v=hit.filter(c=>c.f.includes(k)).length;return `<div class="mrow"><span>${F[k].code.split(' ')[0]}</span><div class="track"><b style="width:${v/tot*100}%;background:var(--${k})"></b></div><span class="v">${v}</span></div>`}).join('')+
+    `<h4 style="margin-top:16px">By stage</h4>`+STG.map((s,i)=>{const v=hit.filter(c=>c.st===i).length;return `<div class="mrow"><span>${s}</span><div class="track"><b style="width:${v/tot*100}%;background:var(--ink)"></b></div><span class="v">${v}</span></div>`}).join('')+
+    `<p class="empty" style="margin-top:10px">Co-held companies count once per vehicle.</p>`;
+
+  // table
+  $('lt').textContent=`Companies (${hit.length})`;
+  $('tb').innerHTML=hit.slice().sort((a,b)=>a.n.localeCompare(b.n)).map(c=>`<tr class="pick" data-i="${c.i}"><td><b>${esc(c.n)}</b></td><td>${[...c.f].map(k=>F[k].code.split(' ')[0]).join(', ')}</td><td class="hidem">${SECT[c.s]}</td><td>${STG[c.st]}</td><td class="hidem">${c.u?`<a href="https://${esc(c.u)}" target="_blank" rel="noopener">${esc(c.u)}</a>`:'—'}</td></tr>`).join('')||`<tr><td colspan="5" class="empty">Nothing matches. Clear a filter to see more.</td></tr>`;
+}
+
+$('funds').onclick=e=>{const b=e.target.closest('.chip');if(!b)return;S.fund=b.dataset.f||null;fixSel();render()};
+$('stages').onclick=e=>{const b=e.target.closest('button');if(!b)return;S.stage=b.dataset.s===''?null:+b.dataset.s;fixSel();render()};
+$('q').oninput=e=>{S.q=e.target.value.trim().toLowerCase();fixSel();render()};
+$('sky').onclick=e=>{const b=e.target.closest('.star');if(!b)return;S.sel=+b.dataset.i;render();if(innerWidth<=960)$('detail').scrollIntoView({block:'nearest',behavior:'smooth'})};
+$('tb').onclick=e=>{if(e.target.closest('a'))return;const r=e.target.closest('tr.pick');if(!r)return;S.sel=+r.dataset.i;render();$('detail').scrollIntoView({block:'nearest',behavior:'smooth'})};
+function fixSel(){if(!match(co[S.sel])){const h=co.filter(match);if(h.length)S.sel=h.sort((a,b)=>b.st-a.st)[0].i}}
+
+render();
+}
+</script>
